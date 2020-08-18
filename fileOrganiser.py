@@ -1,64 +1,67 @@
 #! python3
+# by Geronimo Shaw
 
-import os
-import sys
-import shutil
 from pathlib import Path
+import os
+import shutil
+import sys
 
-print("This program checks your Downloads folder for PDF, txt, exe, zip files and moves them to the corresponding \n"
-      "folders.\n"
-      "PDF/txt/zip files are moved to your Documents folder.\n"
-      "A folder called AppInstallers will be made at C:\\Users\\profile\\AppInstallers")
+"""This script cleans up your Downloads folder. It will search for certain file extensions and moves those files to the
+assigned folder. If the file is a .pdf document, it will be moved to a new folder - PDF - in the Documents folder.
+The same thing applies to .zip files."""
 
 
-usrFolder = Path.home()     # this should determine the users profile path
-dlFolder = Path("Downloads")
-# I want to create a windows path value of "Downloads" as every windows profile has this folder
-abPath = str(usrFolder / dlFolder)  # add the windows path values together and convert to a string
-docFolder = Path("Documents")
-docPath = str(usrFolder / docFolder)
-appFolder = Path("AppInstallers")
-appPath = str(usrFolder / appFolder)
-#
-#
-#
-os.chdir(abPath)    # change current working directory to /users/profile/Downloads
-p = Path(abPath)
-for fileExt in p.glob('*.pdf'):    # checks for files with the .pdf extension
+"""Prints the users profile to screen that way you know where the script is poking around.
+usrFolder and docFolder are WindowsPath values that are converted to strings for navigation.
+zipFolder and pdfFolder are WindowsPath values that are used for after the folders are made."""
+
+print("Your home folder is %s " % str(Path.home()))
+usrFolder = str(Path.home() / "Downloads")
+docFolder = str(Path.home() / "Documents")
+pdfFolder = Path.home() / "Documents" / "PDF"
+zipFolder = Path.home() / "Documents" / "ZIP"
+p = Path(usrFolder)
+
+"""These try/except clauses are to make the folder if it does not exist, except if the folder does exist the program
+will move on."""
+
+try:
+    os.mkdir(str(pdfFolder))
+except FileExistsError:
+    print("The PDF folder already exists in Documents.")
+
+try:
+    os.mkdir(str(zipFolder))
+except FileExistsError:
+    print("The ZIP folder already exists in Documents.")
+
+"""Loops through the Downloads folder and checks for different file type extensions. If a match is found shutil will
+move that file to the assigned folders. .pdf to Documents/PDF or .zip to Documents/ZIP.
+As of right now, those two extensions are the only ones that make separate folders in Documents."""
+
+for fileExt in p.glob("*.pdf"): # Loops through Downloads folder for files with .pdf extension and moves them to PDF.
     try:
-        docName = Path(fileExt)
-        shutil.move(str(docName), docPath)  # moves it to the documents folder
-        print("Moving %s " % str(docName))
+        shutil.move(str(fileExt), str(pdfFolder))
     except shutil.Error:
-        print("The file %s already exists in the Documents folder." % str(docName))
+        print("That file already exists in Documents.")
 
-
-for fileExt in p.glob('*.txt'):    # checks for file with .txt extension
+for fileExt in p.glob("*.zip"):
     try:
-        docName = Path(fileExt)
-        shutil.move(str(docName), docPath)  # moves it to the documents folder
-        print("Moving %s " % str(docName))
+        shutil.move(str(fileExt), str(zipFolder))
     except shutil.Error:
-        print("The file %s already exists in the Documents folder." % str(docName))
+        print("That file already exists in Documents.")
 
-for fileExt in p.glob('*.exe'):
+for fileExt in p.glob("*.docx"):
     try:
-        appName = Path(fileExt)
-        shutil.move(str(appName), appPath)
-        print("Moving %s " % str(appName))
+        shutil.move(str(fileExt), docFolder)
     except shutil.Error:
-        print("The file %s already exists in the AppInstallers folder." % str(appName))
+        print("That file already exists in Documents.")
 
-for fileExt in p.glob('*.zip'):
+for fileExt in p.glob("*.odt"):
     try:
-        zipName = Path(fileExt)
-        shutil.move(str(zipName), docPath)
-        print("Moving %s " % str(zipName))
+        shutil.move(str(fileExt), docFolder)
     except shutil.Error:
-        print("The file %s already exists in the Documents folder." % str(zipName))
+        print("That file already exists in Documents.")
 
-print("Tasks complete.")
-input("Press Enter to exit...")
-
-
+input("Tasks complete. Please press Enter to exit.\n")
 sys.exit()
