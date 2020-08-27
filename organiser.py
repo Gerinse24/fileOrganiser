@@ -4,60 +4,95 @@ from tkinter import *
 from tkinter import filedialog
 import shutil
 
+explanation = """This is File Organiser.
+This program allows you to move a file or files from one location to another.
+If a file already exists in a location you can rename the file and save it.
+Usage: Click Open Files and choose the files you want to move.
+Click Destination and choose a folder to move or save the files to and click Move."""
+
+exsplit = explanation.split('\n')
+
+# Create main window
 root = Tk()
-root.title("File Organiser")
-# Encountered the scope issue with grid_forget() and destroy(). My understanding is that the labels need to be created,
-# outside of the created functions to be forgotten and then recreated each time the chosen button is pressed.
-my_label = Label(root)
-my_label2 = Label(root)
-my_label3 = Label(root)
+root.title("File Organiser - By Geronimo Shaw")
+
+# This frame sits above the listbox at the top of the window.
+frame = Frame(root, height=10, width=10)
+frame.pack()
+label1 = Label(frame, text="File Organiser")
+label1.pack()
+
+# This frame contains a listbox which will be used to print text to the screen as tasks
+# are performed.
+frame2 = Frame(root)
+frame2.pack(fill=BOTH, expand=1)
+listbox = Listbox(frame2)
+listbox.pack(fill=BOTH, expand=1)
+
+for i in range(len(exsplit)):
+    listbox.insert(END, exsplit[i])
+
+# This frame contains the buttons and are anchored to the left part of the frame
+# so they don't move when the window is resized
+frame3 = LabelFrame(root)
+frame3.pack(anchor=W)
 
 
-# folderName and folderDest are global variables so shutil can move the file or folder to the chosen destination when,
-# the chosen button is pressed.
-# Choose the File you wish to move
+# This function is called when the "Open" button is clicked. It will open the file dialogue window
+# The File that is selected is then inserted into a listbox and the file path is displayed on screen
 def fileopen():
-    global folderName
-    global my_label
-    my_label.grid_forget()
-    root.folder_name = filedialog.askopenfilename()
-    folderName = root.folder_name
-    my_label = Label(root, text=root.folder_name)
-    my_label.grid(row=0, column=1)
+    global file_name
+    file_name = filedialog.askopenfilename()
+    listbox.insert(END, file_name)
 
 
-# Choose the Folder to move it too
-def filedest():
-    global folderDest
-    global my_label2
-    my_label2.grid_forget()
-
-    root.folder_dest = filedialog.askdirectory()
-    folderDest = root.folder_dest
-    my_label2 = Label(root, text=root.folder_dest)
-    my_label2.grid(row=1, column=1)
+def multi_files():
+    global filenames
+    filenames = filedialog.askopenfilenames(title="Select Files",
+                                            filetypes=[("PDF files", "*.pdf"),
+                                                       ("ZIP files", "*.zip"),
+                                                       ("All files", ".*")], multiple=True)
+    for i in range(len(filenames)):
+        listbox.insert(END, "File Chosen: " + filenames[i])
 
 
-# Performs the task of moving the file
-def filetomove():
-    global my_label3
-    my_label3.grid_forget()
+# This function is called when the "Destination" button is clicked.
+# A file explorer window will show up, only this time asking for a folder location instead of a file.
+# The Folder that's selected will again insert on screen for the user
+def folderlocation():
+    global folder_dest
+    folder_dest = filedialog.askdirectory()
+    listbox.insert(END, "Move to: " + folder_dest)
+
+
+# move() is called when the "Move" button is clicked. The function will try to move the file to the chosen location
+# except if shutil encounters an error. The user can go back to the destination button and chose a different location.
+def move():
     try:
-        shutil.move(folderName, folderDest)
-        my_label3 = Label(root, text="Complete.")
-        my_label3.grid(row=2, column=1)
+        for i in range(len(filenames)):
+            shutil.move(filenames[i], folder_dest)
+            listbox.insert(END, "File has been moved.")
     except shutil.Error:
-        my_label3 = Label(root, text="That File already exists in this Folder.")
-        my_label3.grid(row=2, column=1)
+        listbox.insert(END, "The file already exists in this location. Change the name to save it.")
+        save_file()
 
 
-my_button = Button(root, text="Open File to Move", command=fileopen, padx=10, pady=10)
-my_button.grid(row=0, column=0)
+def save_file():
+    global file_save
+    file_save = filedialog.asksaveasfilename(initialdir=folder_dest, title="Save file",
+                                             filetypes=(("ZIP files", "*.zip"), ("All files", "*.*")))
+    for i in range(len(filenames)):
+        shutil.copyfile(filenames, file_save)
+        listbox.insert(END, "The file is renamed and saved")
 
-my_button2 = Button(root, text="Destination Folder", command=filedest, padx=10, pady=10)
-my_button2.grid(row=1, column=0)
 
-my_button3 = Button(root, text="Move File", command=filetomove, padx=10, pady=10)
-my_button3.grid(row=2, column=0)
-root.mainloop()
+openbutton = Button(frame3, text="Open Files...", command=multi_files)
+openbutton.pack(side=LEFT)
 
+locationbutton = Button(frame3, text="Destination...", command=folderlocation)
+locationbutton.pack(side=LEFT)
+
+movebutton = Button(frame3, text="Move...", command=move)
+movebutton.pack(side=LEFT)
+
+mainloop()
